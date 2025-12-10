@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 
-const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8080/ws/alerts';
+const WS_URL = 'wss://mapup-project.onrender.com/ws/alerts';
 
 export const useWebSocket = () => {
   const [lastAlert, setLastAlert] = useState(null);
