@@ -18,14 +18,38 @@ import (
 
 func main() {
 	// Database connection
-	dbHost := getEnv("DB_HOST", "localhost")
-	dbPort := getEnv("DB_PORT", "5432")
-	dbUser := getEnv("DB_USER", "postgres")
-	dbPassword := getEnv("DB_PASSWORD", "postgres")
-	dbName := getEnv("DB_NAME", "geofencing")
+	// Support DATABASE_URL (Railway, Render, Heroku) or individual env vars
+	var connStr string
+	databaseURL := os.Getenv("DATABASE_URL")
 
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		dbHost, dbPort, dbUser, dbPassword, dbName)
+	if databaseURL != "" {
+		// Use DATABASE_URL if provided (deployment platforms)
+		connStr = databaseURL
+		// Railway/Render may use sslmode=require
+		if os.Getenv("DB_SSL_MODE") == "" {
+			// Add sslmode if not in URL
+			if len(databaseURL) > 0 && databaseURL[len(databaseURL)-1] != '?' {
+				if contains(databaseURL, "?") {
+					connStr += "&sslmode=require"
+				} else {
+					connStr += "?sslmode=require"
+				}
+			}
+		}
+		log.Println("Using DATABASE_URL for connection")
+	} else {
+		// Use individual env vars (local development)
+		dbHost := getEnv("DB_HOST", "localhost")
+		dbPort := getEnv("DB_PORT", "5432")
+		dbUser := getEnv("DB_USER", "postgres")
+		dbPassword := getEnv("DB_PASSWORD", "postgres")
+		dbName := getEnv("DB_NAME", "geofencing")
+		sslMode := getEnv("DB_SSL_MODE", "disable")
+
+		connStr = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+			dbHost, dbPort, dbUser, dbPassword, dbName, sslMode)
+		log.Printf("Using local database connection: %s@%s:%s/%s", dbUser, dbHost, dbPort, dbName)
+	}
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
@@ -92,4 +116,17 @@ func getEnv(key, defaultValue string) string {
 		return defaultValue
 	}
 	return value
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && (s[:len(substr)] == substr || s[len(s)-len(substr):] == substr || containsMiddle(s, substr)))
+}
+
+func containsMiddle(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }
