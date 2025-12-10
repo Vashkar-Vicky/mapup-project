@@ -67,6 +67,7 @@ export const useWebSocket = () => {
         ws.current.close();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { lastAlert, isConnected };

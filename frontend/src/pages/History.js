@@ -22,6 +22,7 @@ const History = () => {
 
   useEffect(() => {
     loadViolations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const loadData = async () => {

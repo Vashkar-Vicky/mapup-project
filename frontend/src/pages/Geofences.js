@@ -17,6 +17,7 @@ const Geofences = () => {
 
   useEffect(() => {
     loadGeofences();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   const loadGeofences = async () => {
